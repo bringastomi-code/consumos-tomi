@@ -223,14 +223,6 @@
     font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
   }
 
-  .expense-row{
-    display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
-    padding-block:12px; border-top:1px solid var(--border);
-  }
-  .expense-row:first-of-type{border-top:none;}
-  .expense-main{display:flex; flex-direction:column; gap:5px; min-width:0;}
-  .expense-desc{font-weight:600; font-size:.96rem;}
-  .expense-meta{display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:.78rem; color:var(--muted);}
   .badge{
     padding:2px 8px; border-radius:999px; font-size:.7rem; font-weight:700;
   }
@@ -238,19 +230,50 @@
   .badge.programado{background:var(--gold-soft); color:var(--gold-ink);}
   .badge.finalizado{background:var(--surface-2); color:var(--muted); border:1px solid var(--border);}
   .badge.archivado{background:var(--danger-soft); color:var(--danger-ink);}
-  .mini-chip{
-    background:var(--surface-2); border:1px solid var(--border); border-radius:999px;
-    padding:1px 8px; font-size:.72rem;
+
+  /* Compact expense row: two slim lines instead of a tall, always-expanded card. */
+  .expense-row-compact{padding-block:8px; border-top:1px solid var(--border);}
+  .expense-row-compact:first-of-type{border-top:none;}
+  .exp-line-main{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .exp-desc-compact{
+    font-weight:600; font-size:.92rem; min-width:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
-  .expense-amounts{text-align:right; flex:none; display:flex; flex-direction:column; gap:2px;}
-  .expense-amounts .total{font-weight:700; font-size:.95rem;}
-  .expense-amounts .mine{font-size:.76rem; color:var(--muted);}
-  .expense-actions{display:flex; gap:4px; margin-top:4px; justify-content:flex-end;}
-  .expense-actions button{
-    background:none; border:none; color:var(--muted); font-size:.85rem; padding:3px 5px;
+  .exp-amounts-compact{display:flex; align-items:center; gap:4px; flex:none;}
+  .exp-total{font-weight:700; font-size:.9rem;}
+  .exp-line-meta{
+    display:flex; align-items:center; gap:6px; margin-top:2px;
+    font-size:.74rem; color:var(--muted); flex-wrap:wrap;
   }
-  .expense-actions button:hover{color:var(--ink);}
-  .expense-actions .del-confirm{color:var(--danger-ink); font-weight:700;}
+  .exp-status{
+    flex:none; font-weight:700; font-size:.68rem; text-transform:uppercase; letter-spacing:.03em;
+  }
+  .exp-status.activo{color:var(--accent-ink);}
+  .exp-status.programado{color:var(--gold-ink);}
+  .exp-status.finalizado{color:var(--muted);}
+  .exp-status.archivado{color:var(--danger-ink);}
+  .exp-meta-text{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .exp-sub{margin-left:auto; flex:none; color:var(--muted);}
+
+  .icon-btn{
+    background:none; border:1px solid transparent; color:var(--muted);
+    width:26px; height:26px; border-radius:8px; font-size:1rem; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center; flex:none;
+  }
+  .icon-btn:hover{background:var(--surface-2); color:var(--ink);}
+  .icon-btn.kebab{font-weight:700;}
+  .icon-btn[aria-expanded="true"]{background:var(--surface-2); color:var(--ink);}
+  .exp-actions-compact{
+    display:flex; gap:6px; margin-top:6px; padding-top:6px; border-top:1px dashed var(--border);
+    flex-wrap:wrap; justify-content:flex-end;
+  }
+  .exp-actions-compact button{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+    padding:5px 10px; font-size:.78rem; color:var(--ink);
+  }
+  .exp-actions-compact button:hover{background:var(--border);}
+  .exp-actions-compact button.danger{color:var(--danger-ink); border-color:var(--danger-soft);}
+  .exp-actions-compact .del-confirm{color:var(--danger-ink); font-weight:700; width:100%; margin-bottom:2px;}
 
   .toggle-finished{
     margin-top:8px; background:none; border:none; color:var(--muted);
@@ -512,6 +535,7 @@
     confirmDeletePerson: null,
     confirmDeleteExpense: null,
     confirmDeleteTarjeta: null,
+    openActionsFor: null,
     editingTarjetaId: null,
     editTarjetaDraftEsMia: true,
     newTarjetaEsMia: true,
@@ -712,6 +736,13 @@
       });
     return map;
   }
+  // Total that other people owe you across a set of tarjetas — the flip side of
+  // egresoValue: on an esMia tarjeta you front the whole charge, but this is the
+  // slice of it that comes back to you, so it belongs back in your net balance.
+  function debtTotal(key, tarjetaIds, activeFn){
+    var map = debtByPerson(key, tarjetaIds, activeFn);
+    return Object.keys(map).reduce(function(s,id){ return s + map[id]; }, 0);
+  }
   function categoryTotals(key, activeFn){
     activeFn = activeFn || isActiveNow;
     var map = {};
@@ -780,8 +811,11 @@
       return {id:t.id, nombre:t.nombre, esMia:t.esMia, monto: tarjetaTotal(t.id, key)};
     });
     var totalGastos = lines.reduce(function(s,l){ return s+l.monto; }, 0);
-    var saldo = ingreso - totalGastos - ahorro;
-    return {ingreso:ingreso, ahorro:ahorro, lines:lines, totalGastos:totalGastos, saldo:saldo};
+    // What others owe you on your own tarjetas: you already fronted it (it's inside
+    // totalGastos), but it's coming back to you, so it has to count as income too.
+    var totalDebido = debtTotal(key, esMiaTarjetaIds());
+    var saldo = ingreso + totalDebido - totalGastos - ahorro;
+    return {ingreso:ingreso, ahorro:ahorro, lines:lines, totalGastos:totalGastos, totalDebido:totalDebido, saldo:saldo};
   }
 
   function renderSaldo(key){
@@ -855,6 +889,7 @@
     var cm = cuotaMensual(e);
     var mine = myShare(e);
     var shared = e.personas && e.personas.length>0;
+
     var metaBits = [];
     if(e.cuotas){
       var cur = 0;
@@ -864,50 +899,53 @@
         if(cur < 1) cur = 0;
         if(cur > e.cuotas) cur = e.cuotas;
       }
-      metaBits.push('cuota ' + (cur>0?cur:'—') + ' de ' + e.cuotas);
-      metaBits.push('termina ' + shortMonthLabel(endKey(e)));
+      metaBits.push('cuota ' + (cur>0?cur:'—') + '/' + e.cuotas + ' · termina ' + shortMonthLabel(endKey(e)));
     } else {
-      metaBits.push('gasto fijo mensual');
+      metaBits.push('fijo');
     }
-    metaBits.push('desde ' + shortMonthLabel(e.mesInicio));
     if(e.categoria) metaBits.push(e.categoria);
+    var peopleNames = (incluyeYo(e) ? ['Vos'] : []).concat((e.personas||[]).map(personName));
+    if(peopleNames.length) metaBits.push(peopleNames.join(', '));
 
-    var peopleChips = (incluyeYo(e) ? '<span class="mini-chip">Vos</span>' : '') + (e.personas||[]).map(function(pid){
-      return '<span class="mini-chip">' + esc(personName(pid)) + '</span>';
-    }).join('');
-
-    var amountsHtml = '<div class="total mono">' + money(cm) + '/mes</div>';
+    var subAmount = '';
     if(!incluyeYo(e)){
-      amountsHtml += '<div class="mine">no incluye tu parte</div>';
+      subAmount = '<span class="exp-sub mono">no incluye tu parte</span>';
     } else if(shared){
-      amountsHtml += '<div class="mine mono">vos: ' + money(mine) + '</div>';
+      subAmount = '<span class="exp-sub mono">vos: ' + money(mine) + '</span>';
     }
 
-    var actions = '';
+    var actionsOpen = (ui.openActionsFor === e.id) || (ui.confirmDeleteExpense === e.id);
+    var actionsHtml = '';
     if(ui.confirmDeleteExpense === e.id){
-      actions = '<span class="del-confirm">¿Eliminar?</span>' +
-        '<button type="button" data-action="delete-expense" data-id="' + e.id + '">Sí</button>' +
-        '<button type="button" data-action="cancel-delete-expense">No</button>';
-    } else {
-      actions = '<button type="button" data-action="edit-expense" data-id="' + e.id + '" title="Editar">✎ Editar</button>';
-      if(e.archived){
-        actions += '<button type="button" data-action="unarchive-expense" data-id="' + e.id + '" title="Reactivar">↺ Reactivar</button>';
-      } else {
-        actions += '<button type="button" data-action="archive-expense" data-id="' + e.id + '" title="Archivar">🗄 Archivar</button>';
-      }
-      actions += '<button type="button" data-action="ask-delete-expense" data-id="' + e.id + '" title="Eliminar">🗑</button>';
+      actionsHtml = '<div class="exp-actions-compact confirm-open">' +
+        '<span class="del-confirm">¿Eliminar este gasto?</span>' +
+        '<button type="button" class="danger" data-action="delete-expense" data-id="' + e.id + '">Sí, eliminar</button>' +
+        '<button type="button" data-action="cancel-delete-expense">Cancelar</button>' +
+      '</div>';
+    } else if(ui.openActionsFor === e.id){
+      actionsHtml = '<div class="exp-actions-compact">' +
+        '<button type="button" data-action="edit-expense" data-id="' + e.id + '">✎ Editar</button>' +
+        (e.archived
+          ? '<button type="button" data-action="unarchive-expense" data-id="' + e.id + '">↺ Reactivar</button>'
+          : '<button type="button" data-action="archive-expense" data-id="' + e.id + '">🗄 Archivar</button>') +
+        '<button type="button" class="danger" data-action="ask-delete-expense" data-id="' + e.id + '">🗑 Eliminar</button>' +
+      '</div>';
     }
 
-    return '<div class="expense-row">' +
-      '<div class="expense-main">' +
-        '<div class="expense-desc">' + esc(e.desc) + '</div>' +
-        '<div class="expense-meta"><span class="badge ' + est + '">' + badgeLabel(est) + '</span>' +
-          metaBits.map(function(m){ return '<span>' + esc(m) + '</span>'; }).join('<span>·</span>') +
+    return '<div class="expense-row-compact">' +
+      '<div class="exp-line-main">' +
+        '<div class="exp-desc-compact">' + esc(e.desc) + '</div>' +
+        '<div class="exp-amounts-compact">' +
+          '<span class="mono exp-total">' + money(cm) + '</span>' +
+          '<button type="button" class="icon-btn kebab" data-action="toggle-actions" data-id="' + e.id + '" title="Acciones" aria-expanded="' + (actionsOpen ? 'true' : 'false') + '">⋮</button>' +
         '</div>' +
-        '<div class="expense-meta">' + peopleChips + '</div>' +
-        '<div class="expense-actions">' + actions + '</div>' +
       '</div>' +
-      '<div class="expense-amounts">' + amountsHtml + '</div>' +
+      '<div class="exp-line-meta">' +
+        '<span class="exp-status ' + est + '">' + badgeLabel(est) + '</span>' +
+        '<span class="exp-meta-text">' + esc(metaBits.join(' · ')) + '</span>' +
+        subAmount +
+      '</div>' +
+      actionsHtml +
     '</div>';
   }
 
@@ -1060,7 +1098,10 @@
     }).join('');
 
     var totalsHtml = (opts.totals||[]).map(function(t){
-      var cells = months.map(function(mk){ return '<td class="mono">' + moneyCompact(t.fn(mk)) + '</td>'; }).join('');
+      var cells = months.map(function(mk){
+        var v = t.fn(mk);
+        return '<td class="mono">' + (t.fmt ? t.fmt(v) : moneyCompact(v)) + '</td>';
+      }).join('');
       return '<tr class="' + t.cls + '"><td class="proj-desc-col">' + t.label + '</td>' + cells + '</tr>';
     }).join('');
 
@@ -1092,15 +1133,22 @@
     for(var i=0;i<MONTHS_AHEAD;i++){ months.push(addMonthsToKey(key, i)); }
     var box = document.getElementById('proyBox');
 
-    var totals = tarjetaTotalsForTable(isActiveNow, 'Te queda (estimado)').map(function(t, idx, arr){
-      if(idx === arr.length-1){
-        var base = t.fn;
-        t.fn = function(mk){
-          return (state.settings.ingreso||0) - (state.settings.ahorro||0) - base(mk);
-        };
-      }
-      return t;
+    var totals = tarjetaTotalsForTable(isActiveNow, 'Te queda (estimado)');
+    var gastosFn = totals[totals.length-1].fn; // sum of every tarjeta's egresoValue, before netting
+    var debtsFn = function(mk){ return debtTotal(mk, esMiaTarjetaIds(), isActiveNow); };
+
+    // Insert a "te deben" credit row just above the final line: it's money that
+    // already left your pocket (counted in the tarjeta rows above) but is coming
+    // back to you, so the estimate needs it added back in.
+    totals.splice(totals.length-1, 0, {
+      label: 'Te deben (a cobrar)',
+      fn: debtsFn,
+      fmt: function(v){ return v>0.5 ? ('+ ' + moneyCompact(v)) : moneyCompact(v); },
+      cls: 'proj-subtotal proj-credit'
     });
+    totals[totals.length-1].fn = function(mk){
+      return (state.settings.ingreso||0) + debtsFn(mk) - (state.settings.ahorro||0) - gastosFn(mk);
+    };
 
     var html = buildMonthTable(months, isActiveNow, {
       excludeArchived: true,
@@ -1108,7 +1156,7 @@
       totals: totals
     });
     box.innerHTML = html
-      ? html + '<p class="muted small" style="margin-top:8px;">El ingreso y el ahorro se asumen iguales todos los meses.</p>'
+      ? html + '<p class="muted small" style="margin-top:8px;">El ingreso, el ahorro y lo que te deben se asumen iguales todos los meses (salvo que cambien las cuotas).</p>'
       : '<p class="empty-hint">No hay gastos activos para proyectar todavía.</p>';
   }
 
@@ -1140,10 +1188,14 @@
     var linesHtml = b.lines.map(function(l){
       return '<div class="balance-line"><span class="lbl">Gasto ' + esc(l.nombre) + ' <span class="muted small">(' + (l.esMia?'total':'tu parte') + ')</span></span><span class="val mono">− ' + money(l.monto) + '</span></div>';
     }).join('');
+    var debtLineHtml = b.totalDebido > 0.5
+      ? '<div class="balance-line"><span class="lbl">Te deben (a cobrar) <span class="muted small">(de tus tarjetas)</span></span><span class="val mono" style="color:var(--accent-ink)">+ ' + money(b.totalDebido) + '</span></div>'
+      : '';
     box.innerHTML =
       '<div class="balance-line editable"><span class="lbl">Ingreso mensual</span>' +
         '<input type="number" id="ingresoInput" class="mono" value="' + (state.settings.ingreso||0) + '" min="0" step="1000"></div>' +
       linesHtml +
+      debtLineHtml +
       '<div class="balance-line editable"><span class="lbl">Ahorro</span>' +
         '<input type="number" id="ahorroInput" class="mono" value="' + (state.settings.ahorro||0) + '" min="0" step="1000"></div>' +
       '<div class="balance-line final ' + (b.saldo<0?'neg':'') + '"><span class="lbl">Cuánto te queda</span><span class="val mono">' + money(b.saldo) + '</span></div>';
@@ -1366,17 +1418,29 @@
     if(action==='set-resumen-tab'){ ui.resumenTab = t.dataset.tab; renderResumen(refMonthKey); return; }
     if(action==='toggle-historial'){ ui.historialOpen = !ui.historialOpen; renderHistorial(refMonthKey); return; }
 
+    if(action==='toggle-actions'){
+      ui.openActionsFor = (ui.openActionsFor === id) ? null : id;
+      var expTA = state.expenses.filter(function(x){ return x.id===id; })[0];
+      if(expTA){
+        var tjTA = tarjetaById(expTA.tarjetaId);
+        if(tjTA) renderOneSection(tjTA, tarjetaIndex(expTA.tarjetaId), refMonthKey);
+      }
+      return;
+    }
     if(action==='edit-expense'){
       var exp = state.expenses.filter(function(x){ return x.id===id; })[0];
+      ui.openActionsFor = null;
       if(exp) openForm(exp.tarjetaId, exp);
       return;
     }
     if(action==='archive-expense'){
       state.expenses.forEach(function(x){ if(x.id===id) x.archived = true; });
+      ui.openActionsFor = null;
       persist(); render(); return;
     }
     if(action==='unarchive-expense'){
       state.expenses.forEach(function(x){ if(x.id===id) x.archived = false; });
+      ui.openActionsFor = null;
       persist(); render(); return;
     }
     if(action==='ask-delete-expense'){ ui.confirmDeleteExpense = id; render(); return; }
@@ -1384,6 +1448,7 @@
     if(action==='delete-expense'){
       state.expenses = state.expenses.filter(function(x){ return x.id!==id; });
       ui.confirmDeleteExpense = null;
+      ui.openActionsFor = null;
       persist(); render(); return;
     }
     if(action==='toggle-finished'){
