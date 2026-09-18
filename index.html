@@ -4,86 +4,98 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Consumos Tomi</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<script>
+  // Apply a manually-chosen theme before first paint, so there's no flash of the
+  // wrong theme. Absence of a saved choice just falls through to prefers-color-scheme.
+  (function(){
+    try{
+      var t = localStorage.getItem('consumosTomiTheme');
+      if(t==='light' || t==='dark') document.documentElement.setAttribute('data-theme', t);
+    }catch(e){}
+  })();
+</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
   :root{
-    --bg:#EDEAE1;
+    --bg:#E9ECF7;
     --surface:#FFFFFF;
-    --surface-2:#F6F3EA;
-    --border:#DDD6C4;
-    --ink:#20241F;
-    --ink-soft:#4B5049;
-    --muted:#787F70;
-    --accent:#1F6F5C;
-    --accent-ink:#0E3E33;
-    --accent-soft:#DCEAE3;
-    --warn:#AD5E2B;
-    --warn-ink:#5C3013;
-    --warn-soft:#F2E0CE;
-    --danger:#9B3B4D;
-    --danger-ink:#5C2029;
-    --danger-soft:#F3E1E3;
-    --info:#4C6389;
-    --info-ink:#25334A;
-    --info-soft:#E2E7EF;
-    --gold:#AD8323;
-    --gold-ink:#5C4611;
-    --gold-soft:#F3E7CC;
-    --shadow:0 1px 2px rgba(24,26,20,.07), 0 6px 18px rgba(24,26,20,.07);
+    --surface-2:#DDE2F1;
+    --border:#C3CAE2;
+    --ink:#10132A;
+    --ink-soft:#434966;
+    --muted:#6C7292;
+    --accent:#2436C9;
+    --accent-ink:#16205F;
+    --accent-soft:#DEE2FA;
+    --warn:#7A3FA6;
+    --warn-ink:#4A2566;
+    --warn-soft:#ECE1F5;
+    --danger:#C2314A;
+    --danger-ink:#6B1524;
+    --danger-soft:#F6DCE1;
+    --info:#0E7C86;
+    --info-ink:#08454B;
+    --info-soft:#D9EEEF;
+    --gold:#B8860B;
+    --gold-ink:#5C4408;
+    --gold-soft:#F3E7C7;
+    --shadow:0 1px 2px rgba(16,19,42,.08), 0 8px 20px rgba(16,19,42,.08);
+    --radius:4px;
+    --radius-sm:3px;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#15181A;
-      --surface:#1D2124;
-      --surface-2:#22262A;
-      --border:#33383C;
-      --ink:#EDEAE1;
-      --ink-soft:#C7C3B8;
-      --muted:#8D9390;
-      --accent:#49B394;
-      --accent-ink:#DCEAE3;
-      --accent-soft:#22352F;
-      --warn:#E08A50;
-      --warn-ink:#F2E0CE;
-      --warn-soft:#3A2A1E;
-      --danger:#E38393;
-      --danger-ink:#F3E1E3;
-      --danger-soft:#3A2229;
-      --info:#8FA6CE;
-      --info-ink:#E2E7EF;
-      --info-soft:#242B36;
-      --gold:#E0B84E;
-      --gold-ink:#F3E7CC;
-      --gold-soft:#332B18;
-      --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.35);
+      --bg:#0D0E1B;
+      --surface:#171933;
+      --surface-2:#1E2140;
+      --border:#33375E;
+      --ink:#ECEEFA;
+      --ink-soft:#C7CBE8;
+      --muted:#8B90B8;
+      --accent:#7C8CFF;
+      --accent-ink:#E4E7FF;
+      --accent-soft:#262A57;
+      --warn:#B98AE0;
+      --warn-ink:#F1E6FA;
+      --warn-soft:#362A52;
+      --danger:#F0728A;
+      --danger-ink:#FCE1E6;
+      --danger-soft:#4A1E29;
+      --info:#4FC3CE;
+      --info-ink:#D8F3F5;
+      --info-soft:#163538;
+      --gold:#E8B93D;
+      --gold-ink:#FBEFC9;
+      --gold-soft:#3E3212;
+      --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 22px rgba(0,0,0,.4);
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"]{
-    --bg:#15181A;
-    --surface:#1D2124;
-    --surface-2:#22262A;
-    --border:#33383C;
-    --ink:#EDEAE1;
-    --ink-soft:#C7C3B8;
-    --muted:#8D9390;
-    --accent:#49B394;
-    --accent-ink:#DCEAE3;
-    --accent-soft:#22352F;
-    --warn:#E08A50;
-    --warn-ink:#F2E0CE;
-    --warn-soft:#3A2A1E;
-    --danger:#E38393;
-    --danger-ink:#F3E1E3;
-    --danger-soft:#3A2229;
-    --info:#8FA6CE;
-    --info-ink:#E2E7EF;
-    --info-soft:#242B36;
-    --gold:#E0B84E;
-    --gold-ink:#F3E7CC;
-    --gold-soft:#332B18;
-    --shadow:0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.35);
+    --bg:#0D0E1B;
+    --surface:#171933;
+    --surface-2:#1E2140;
+    --border:#33375E;
+    --ink:#ECEEFA;
+    --ink-soft:#C7CBE8;
+    --muted:#8B90B8;
+    --accent:#7C8CFF;
+    --accent-ink:#E4E7FF;
+    --accent-soft:#262A57;
+    --warn:#B98AE0;
+    --warn-ink:#F1E6FA;
+    --warn-soft:#362A52;
+    --danger:#F0728A;
+    --danger-ink:#FCE1E6;
+    --danger-soft:#4A1E29;
+    --info:#4FC3CE;
+    --info-ink:#D8F3F5;
+    --info-soft:#163538;
+    --gold:#E8B93D;
+    --gold-ink:#FBEFC9;
+    --gold-soft:#3E3212;
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 8px 22px rgba(0,0,0,.4);
     color-scheme: dark;
   }
 
@@ -93,11 +105,11 @@
   body{
     background:var(--bg);
     color:var(--ink);
-    font-family:"Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family:"Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     padding-inline:16px;
-    padding-block:20px 48px;
+    padding-block:20px calc(88px + env(safe-area-inset-bottom, 0px));
   }
-  h1,h2,h3{font-family:"Zilla Slab", Georgia, serif; margin:0; text-wrap:balance;}
+  h1,h2,h3{font-family:"Bricolage Grotesque", "Hanken Grotesk", sans-serif; margin:0; text-wrap:balance; letter-spacing:-.01em;}
   .mono{font-family:"JetBrains Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums;}
   .muted{color:var(--muted);}
   .small{font-size:.82rem;}
@@ -105,7 +117,7 @@
   button{font:inherit; cursor:pointer;}
   textarea{
     font:inherit; font-family:"JetBrains Mono", ui-monospace, monospace; font-size:.8rem;
-    padding:9px 11px; border-radius:10px; border:1px solid var(--border);
+    padding:9px 11px; border-radius:var(--radius); border:1px solid var(--border);
     background:var(--surface-2); color:var(--ink); width:100%; resize:vertical;
   }
 
@@ -119,33 +131,30 @@
     padding-block:10px 8px;
     border-bottom:1px solid var(--border);
   }
-  .topbar-row1{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .topbar-row1{display:flex; align-items:center; justify-content:space-between; gap:10px 12px; flex-wrap:wrap;}
   .topbar-row2{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:.85rem;}
   .topbar-row2 input[type="month"]{width:auto; padding:6px 10px; font-size:.85rem;}
   .topbar-row3{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:.8rem;}
-  .brand{display:flex; align-items:center; gap:10px;}
-  .brand-mark{
-    width:38px; height:38px; border-radius:10px;
-    background:var(--accent); color:var(--surface);
-    display:flex; align-items:center; justify-content:center;
-    font-family:"Zilla Slab", serif; font-weight:700; font-size:1.2rem;
-    flex:none;
+  .wordmark{
+    font-family:"Bricolage Grotesque", sans-serif; font-weight:800; font-size:1.05rem;
+    letter-spacing:-.01em; white-space:nowrap;
   }
-  .brand-text h1{font-size:1.25rem; line-height:1.1;}
-  .saldo-pill{
-    padding:8px 14px; border-radius:999px;
-    font-family:"JetBrains Mono", monospace; font-weight:600; font-size:.92rem;
-    white-space:nowrap;
-    box-shadow:var(--shadow);
-    border:1px solid transparent;
+  .wordmark em{font-style:normal; color:var(--accent-ink);}
+  .topbar-controls{display:flex; align-items:center; gap:10px; flex:none;}
+  .theme-toggle{
+    width:32px; height:32px; border-radius:var(--radius); flex:none;
+    border:1px solid var(--border); background:none; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; font-size:1rem;
   }
-  .saldo-pill.pos{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
-  .saldo-pill.neg{background:var(--danger-soft); color:var(--danger-ink); border-color:var(--danger);}
+  .theme-toggle:hover{background:var(--surface-2);}
+  .topbar-saldo{font-weight:700; font-size:.86rem; white-space:nowrap;}
+  .topbar-saldo.pos{color:var(--accent-ink);}
+  .topbar-saldo.neg{color:var(--danger-ink);}
 
   .sync-badge{
     display:inline-flex; align-items:center; gap:6px;
-    padding:4px 10px; border-radius:999px; font-size:.76rem; font-weight:600;
-    border:1px solid var(--border); background:var(--surface-2); color:var(--muted);
+    padding:4px 9px; border-radius:var(--radius-sm); font-size:.74rem; font-weight:600;
+    border:1px solid var(--border); background:transparent; color:var(--muted);
   }
   .sync-badge.ok{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
   .sync-badge.err{background:var(--danger-soft); color:var(--danger-ink); border-color:var(--danger);}
@@ -157,43 +166,55 @@
   .card{
     background:var(--surface);
     border:1px solid var(--border);
-    border-radius:16px;
+    border-radius:var(--radius);
     padding:16px;
-    box-shadow:var(--shadow);
   }
-  .card-head{display:flex; flex-direction:column; gap:2px; margin-bottom:12px;}
-  .card-head h2{font-size:1.05rem;}
+  .card-head{
+    display:flex; flex-direction:column; gap:3px; margin-bottom:14px;
+    padding-bottom:10px; border-bottom:1px solid var(--border);
+  }
+  .card-head h2{
+    font-size:.76rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--ink-soft); font-family:"Bricolage Grotesque", sans-serif;
+  }
 
   .onboarding-card{border:1.5px dashed var(--accent); background:var(--accent-soft);}
   .onboarding-card h2{color:var(--accent-ink);}
   .onboarding-card ol{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:6px; font-size:.9rem; color:var(--accent-ink);}
+  .onboarding-card .card-head{margin-bottom:0; padding-bottom:0; border-bottom:none;}
+  .onboarding-card .card-head:has(+ ol:not([hidden])){margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--accent);}
+  .onboarding-head{display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer;}
+  .onboarding-actions{display:flex; gap:4px; flex:none;}
+  .onboarding-actions .icon-btn{color:var(--accent-ink);}
+  .onboarding-actions .icon-btn:hover{background:var(--accent);}
 
-  .chips-row{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;}
+  .chips-row{display:flex; flex-wrap:wrap; gap:7px; margin-bottom:12px;}
   .chip{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:6px 12px; border-radius:999px;
-    background:var(--surface-2); border:1px solid var(--border);
-    font-size:.85rem; font-weight:500;
+    display:inline-flex; align-items:center; gap:7px;
+    padding:5px 10px; border-radius:var(--radius-sm);
+    background:transparent; border:1px solid var(--border);
+    font-family:"JetBrains Mono", monospace; font-size:.78rem; font-weight:500;
+    color:var(--ink-soft);
   }
-  .chip.you{background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent);}
-  .chip .tag{color:var(--muted); font-size:.72rem; font-weight:600;}
+  .chip.you{border-color:var(--accent); color:var(--accent-ink);}
+  .chip .tag{color:var(--muted); font-size:.68rem; font-weight:600; text-transform:uppercase;}
   .chip button{
     background:none; border:none; padding:0; margin:0; line-height:1;
-    color:var(--muted); font-size:1rem; display:flex;
+    color:var(--muted); font-size:.95rem; display:flex; font-family:inherit;
   }
   .chip button:hover{color:var(--danger);}
   .chip.confirm{background:var(--danger-soft); border-color:var(--danger); color:var(--danger-ink);}
   .chip.confirm button{color:var(--danger-ink); font-weight:700;}
 
   .tarjeta-edit{
-    background:var(--surface-2); border:1px solid var(--border); border-radius:12px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius);
     padding:12px; display:flex; flex-direction:column; gap:10px; margin-bottom:12px;
   }
 
   .inline-form{display:flex; gap:8px; flex-wrap:wrap;}
   .inline-form input[type="text"]{flex:1; min-width:160px;}
   input[type="text"], input[type="number"], input[type="month"], select{
-    font:inherit; padding:9px 11px; border-radius:10px;
+    font:inherit; padding:9px 11px; border-radius:var(--radius);
     border:1px solid var(--border); background:var(--surface-2); color:var(--ink);
     width:100%;
   }
@@ -201,35 +222,35 @@
     outline:2px solid var(--accent); outline-offset:1px;
   }
   .btn{
-    padding:9px 16px; border-radius:10px; border:1px solid var(--border);
-    background:var(--surface-2); color:var(--ink); font-weight:600; font-size:.88rem;
+    padding:10px 16px; border-radius:var(--radius); border:1.5px solid var(--ink);
+    background:transparent; color:var(--ink); font-weight:700; font-size:.76rem;
+    text-transform:uppercase; letter-spacing:.04em; font-family:"Bricolage Grotesque", sans-serif;
   }
-  .btn:hover{border-color:var(--ink-soft);}
-  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
-  .btn.ghost{background:transparent; border-color:transparent; color:var(--muted); padding:6px 10px;}
-  .btn.ghost:hover{color:var(--ink);}
-  .btn.small{padding:6px 11px; font-size:.8rem;}
+  .btn:hover{background:var(--surface-2);}
+  .btn.primary{background:var(--ink); border-color:var(--ink); color:var(--surface);}
+  .btn.primary:hover{background:var(--accent-ink); border-color:var(--accent-ink);}
+  .btn.ghost{
+    background:transparent; border-color:transparent; color:var(--muted); padding:6px 10px;
+    text-transform:none; font-weight:600; font-family:inherit; letter-spacing:0;
+  }
+  .btn.ghost:hover{color:var(--ink); background:none;}
+  .btn.small{padding:6px 11px; font-size:.68rem;}
   .btn.block{width:100%; display:flex; justify-content:center;}
-  .btn.danger-outline{border-color:var(--danger); color:var(--danger-ink); background:var(--danger-soft);}
+  .btn.danger-outline{
+    border-color:var(--danger); color:var(--danger-ink); background:var(--danger-soft);
+    text-transform:none; font-family:inherit;
+  }
 
-  .section-card{border-top:4px solid var(--tarjeta-c, var(--border));}
   .section-card .card-head{
     display:flex; flex-direction:row; align-items:flex-start; justify-content:space-between; gap:10px;
   }
   .section-card .card-head .titles{display:flex; flex-direction:column; gap:2px;}
   .section-tag{
-    display:inline-flex; align-items:center; gap:7px; width:fit-content; padding:3px 10px; border-radius:999px;
-    background:var(--surface-2); border:1px solid var(--border);
-    font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    display:inline-flex; align-items:center; gap:7px; width:fit-content;
+    font-family:"Bricolage Grotesque", sans-serif;
+    font-size:.76rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--ink-soft);
   }
-
-  .badge{
-    padding:2px 8px; border-radius:999px; font-size:.7rem; font-weight:700;
-  }
-  .badge.activo{background:var(--accent-soft); color:var(--accent-ink);}
-  .badge.programado{background:var(--gold-soft); color:var(--gold-ink);}
-  .badge.finalizado{background:var(--surface-2); color:var(--muted); border:1px solid var(--border);}
-  .badge.archivado{background:var(--danger-soft); color:var(--danger-ink);}
 
   /* Compact expense row: two slim lines instead of a tall, always-expanded card. */
   .expense-row-compact{padding-block:8px; border-top:1px solid var(--border);}
@@ -257,7 +278,7 @@
 
   .icon-btn{
     background:none; border:1px solid transparent; color:var(--muted);
-    width:26px; height:26px; border-radius:8px; font-size:1rem; line-height:1;
+    width:26px; height:26px; border-radius:var(--radius-sm); font-size:1rem; line-height:1;
     display:inline-flex; align-items:center; justify-content:center; flex:none;
   }
   .icon-btn:hover{background:var(--surface-2); color:var(--ink);}
@@ -268,7 +289,7 @@
     flex-wrap:wrap; justify-content:flex-end;
   }
   .exp-actions-compact button{
-    background:var(--surface-2); border:1px solid var(--border); border-radius:8px;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm);
     padding:5px 10px; font-size:.78rem; color:var(--ink);
   }
   .exp-actions-compact button:hover{background:var(--border);}
@@ -293,6 +314,7 @@
   .expense-form{
     width:100%; max-width:440px; max-height:88vh; overflow-y:auto;
     display:flex; flex-direction:column; gap:12px;
+    box-shadow:var(--shadow);
   }
   .field{display:flex; flex-direction:column; gap:5px;}
   .field label{font-size:.8rem; font-weight:600; color:var(--ink-soft);}
@@ -300,17 +322,17 @@
   .field-row .field{flex:1;}
   .seg{display:flex; gap:6px; flex-wrap:wrap;}
   .seg button{
-    flex:1; padding:8px 6px; border-radius:9px; border:1px solid var(--border);
-    background:var(--surface-2); color:var(--muted); font-size:.78rem; font-weight:600;
+    flex:1; padding:8px 6px; border-radius:var(--radius-sm); border:1px solid var(--border);
+    background:transparent; color:var(--muted); font-size:.78rem; font-weight:600;
   }
   .seg button.active{background:var(--ink); color:var(--surface); border-color:var(--ink);}
   .persona-toggle{
     display:inline-flex; align-items:center; gap:5px;
-    padding:6px 11px; border-radius:999px; border:1px solid var(--border);
-    background:var(--surface-2); color:var(--ink-soft); font-size:.83rem;
+    padding:6px 11px; border-radius:var(--radius-sm); border:1px solid var(--border);
+    background:transparent; color:var(--ink-soft); font-family:"JetBrains Mono", monospace; font-size:.8rem;
   }
-  .persona-toggle.selected{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink); font-weight:600;}
-  .form-error{color:var(--danger-ink); background:var(--danger-soft); border-radius:8px; padding:8px 10px; font-size:.83rem; margin:0;}
+  .persona-toggle.selected{background:var(--accent); border-color:var(--accent); color:var(--surface); font-weight:600;}
+  .form-error{color:var(--danger-ink); background:var(--danger-soft); border-radius:var(--radius); padding:8px 10px; font-size:.83rem; margin:0;}
   .form-note{color:var(--muted); font-size:.8rem; margin:0;}
   .form-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:4px; flex-wrap:wrap;}
   .form-head{display:flex; justify-content:space-between; align-items:center;}
@@ -321,14 +343,14 @@
     .grid-2{grid-template-columns:1fr 1fr;}
   }
 
-  .dot{width:10px; height:10px; border-radius:50%; flex:none; display:inline-block;}
+  .dot{width:9px; height:9px; border-radius:2px; flex:none; display:inline-block;}
 
   .resumen-head{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
   .resumen-head select{width:auto; padding:6px 10px; font-size:.85rem;}
   .resumen-tabs{margin:0;}
   .resumen-statement{display:flex; flex-direction:column; gap:10px;}
   .resumen-total{font-size:1.9rem; font-weight:700; line-height:1;}
-  .resumen-bar{display:flex; height:14px; border-radius:999px; overflow:hidden; background:var(--surface-2); border:1px solid var(--border);}
+  .resumen-bar{display:flex; height:12px; border-radius:var(--radius-sm); overflow:hidden; background:var(--surface-2); border:1px solid var(--border);}
   .resumen-bar span{display:block; height:100%;}
   .resumen-legend{display:flex; flex-direction:column; gap:7px; margin-top:2px;}
   .resumen-legend-row{display:flex; align-items:center; gap:9px; font-size:.88rem;}
@@ -338,7 +360,7 @@
   .deuda-row{display:flex; justify-content:space-between; align-items:center; padding-block:8px; border-top:1px solid var(--border);}
   .deuda-row:first-of-type{border-top:none;}
   .deuda-name{display:flex; align-items:center; gap:9px;}
-  .deuda-amt{font-weight:700; color:var(--gold-ink); background:var(--gold-soft); padding:3px 10px; border-radius:999px; font-size:.85rem;}
+  .deuda-amt{font-weight:700; color:var(--gold-ink); font-family:"JetBrains Mono", monospace; font-size:.92rem;}
 
   .proj-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -4px;}
   .proj-table{border-collapse:collapse; width:100%; font-size:.8rem;}
@@ -363,10 +385,39 @@
 
   .cat-row{display:flex; flex-direction:column; gap:4px; padding-block:8px;}
   .cat-top{display:flex; justify-content:space-between; font-size:.86rem;}
-  .cat-bar{height:8px; border-radius:999px; background:var(--surface-2); overflow:hidden;}
-  .cat-bar > span{display:block; height:100%; background:var(--accent); border-radius:999px;}
+  .cat-bar{height:7px; border-radius:var(--radius-sm); background:var(--surface-2); overflow:hidden;}
+  .cat-bar > span{display:block; height:100%; background:var(--accent);}
 
   .foot{text-align:center; padding-top:8px;}
+
+  /* The balance gets real hero treatment at the top of Inicio instead of hiding
+     in a small pill — this is the one number the whole app exists to answer. */
+  .hero-stat{padding-block:6px 2px;}
+  .hero-label{
+    font-family:"Bricolage Grotesque", sans-serif; text-transform:uppercase;
+    letter-spacing:.09em; font-size:.72rem; color:var(--muted); margin-bottom:2px;
+  }
+  .hero-figure{font-size:2.5rem; font-weight:700; line-height:1.05; letter-spacing:-.01em;}
+  .hero-figure.pos{color:var(--accent-ink);}
+  .hero-figure.neg{color:var(--danger-ink);}
+  @media (min-width:480px){ .hero-figure{font-size:3rem;} }
+
+  /* Tabbed navigation: splits the long single-scroll page into three focused
+     screens (Inicio / Gastos / Proyección) so each one is a short, easy scroll. */
+  .tab-panel{display:flex; flex-direction:column; gap:16px;}
+  .tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:30;
+    background:var(--surface); border-top:1px solid var(--border);
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  .tabbar-inner{display:flex; max-width:760px; margin:0 auto;}
+  .tabbar button{
+    flex:1; padding:13px 4px 11px; background:none;
+    border:none; border-top:2px solid transparent; color:var(--muted);
+    font-family:"Bricolage Grotesque", sans-serif; font-weight:700;
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;
+  }
+  .tabbar button.active{color:var(--ink); border-top-color:var(--accent);}
 </style>
 </head>
 <body>
@@ -374,11 +425,11 @@
 <div class="wrap">
   <header class="topbar">
     <div class="topbar-row1">
-      <div class="brand">
-        <span class="brand-mark">$</span>
-        <div class="brand-text"><h1>Consumos Tomi</h1></div>
+      <span class="wordmark">Consumos<em>Tomi</em></span>
+      <div class="topbar-controls">
+        <span id="topbarSaldo" class="topbar-saldo mono"></span>
+        <button type="button" class="theme-toggle" id="themeToggleBtn" data-action="toggle-theme" title="Cambiar tema" aria-label="Cambiar tema claro u oscuro">🌙</button>
       </div>
-      <div id="saldoPill" class="saldo-pill">…</div>
     </div>
     <div class="topbar-row2">
       <span class="muted">Viendo</span>
@@ -391,81 +442,106 @@
     </div>
   </header>
 
-  <section class="card onboarding-card" id="onboardingCard" hidden>
-    <div class="card-head"><h2>Para arrancar</h2></div>
-    <ol>
-      <li>Si compartís gastos con alguien, sumalo en "Personas".</li>
-      <li>Mirá las tarjetas de abajo — ya tenés Otras Tarjetas, Gastos Fijos y Mi Tarjeta, pero podés renombrarlas o agregar más.</li>
-      <li>Cargá tus gastos con el botón "+ Agregar" de cada tarjeta.</li>
-      <li>Completá tu ingreso y tu ahorro mensual en "Ingresos y egresos".</li>
-      <li>Arriba de todo, en "Sincronización", conectá tu cuenta para verlo también desde el celular.</li>
-    </ol>
-  </section>
-
-  <section class="card">
-    <div class="card-head">
-      <h2>Personas</h2>
-      <p class="muted small">Con quién compartís gastos hoy. Sumá o sacá gente cuando cambie — no quedan fijas.</p>
+  <div class="tab-panel" id="panelInicio">
+    <div class="hero-stat">
+      <div class="hero-label" id="heroLabel">Saldo estimado</div>
+      <div class="hero-figure mono" id="heroSaldo">…</div>
     </div>
-    <div id="personasList" class="chips-row"></div>
-    <form id="personForm" class="inline-form">
-      <input id="personInput" type="text" placeholder="Nombre de la persona" maxlength="24" autocomplete="off">
-      <button type="submit" class="btn primary">Agregar</button>
-    </form>
-  </section>
 
-  <section class="card">
-    <div class="card-head">
-      <h2>Tarjetas y gastos</h2>
-      <p class="muted small">Las categorías donde cargás tus gastos. Agregá, renombrá o borrá las que necesites — no tenés por qué quedarte con estas tres.</p>
-    </div>
-    <div id="tarjetasList" class="chips-row"></div>
-    <div id="tarjetaEditBox"></div>
-    <form id="tarjetaForm" class="inline-form">
-      <input id="tarjetaInput" type="text" placeholder="Nombre de la tarjeta nueva" maxlength="30" autocomplete="off">
-      <div class="seg" style="flex:0 0 auto; width:auto;">
-        <button type="button" data-action="set-new-tarjeta-mia" data-val="true" class="active">Vos ponés la plata</button>
-        <button type="button" data-action="set-new-tarjeta-mia" data-val="false">La pone otra persona</button>
+    <section class="card onboarding-card" id="onboardingCard" hidden>
+      <div class="card-head onboarding-head" data-action="toggle-onboarding">
+        <h2>Cómo empezar</h2>
+        <div class="onboarding-actions">
+          <button type="button" class="icon-btn" id="onboardingToggleBtn" data-action="toggle-onboarding" title="Mostrar u ocultar" aria-label="Mostrar u ocultar instrucciones" aria-expanded="false">▾</button>
+          <button type="button" class="icon-btn" data-action="dismiss-onboarding" title="No volver a mostrar" aria-label="Cerrar y no volver a mostrar">✕</button>
+        </div>
       </div>
-      <button type="submit" class="btn primary">Agregar tarjeta</button>
-    </form>
-  </section>
-
-  <div id="sectionsContainer"></div>
-
-  <section class="card" id="proyCard">
-    <div class="card-head"><h2>Proyección mensual</h2><p class="muted small">Mes a mes, como en tu planilla: todo lo que tenés activo y lo que se viene.</p></div>
-    <div id="proyBox"></div>
-  </section>
-
-  <div class="grid-2">
-    <section class="card" id="resumenCard">
-      <div class="card-head"><h2>Resumen por tarjeta</h2></div>
-      <div id="resumenBox"></div>
+      <ol id="onboardingList" hidden>
+        <li>Si compartís gastos con alguien, sumalo en "Personas" (pestaña Gastos).</li>
+        <li>Mirá las tarjetas en la pestaña "Gastos" — ya tenés Otras Tarjetas, Gastos Fijos y Mi Tarjeta, pero podés renombrarlas o agregar más.</li>
+        <li>Cargá tus gastos con el botón "+ Agregar" de cada tarjeta.</li>
+        <li>Completá tu ingreso y tu ahorro mensual en "Ingresos y egresos", acá abajo.</li>
+        <li>Arriba de todo, en "Sincronización", conectá tu cuenta para verlo también desde el celular.</li>
+      </ol>
     </section>
-    <section class="card" id="deudasCard">
-      <div class="card-head"><h2>Lo que me deben</h2><p class="muted small">Sumando todas las tarjetas que son tuyas.</p></div>
-      <div id="deudasBox"></div>
+
+    <section class="card" id="balanceCard">
+      <div class="card-head"><h2>Ingresos y egresos</h2><p class="muted small">Balance del mes que estás viendo arriba.</p></div>
+      <div id="balanceBox"></div>
+    </section>
+
+    <div class="grid-2">
+      <section class="card" id="resumenCard">
+        <div class="card-head"><h2>Resumen por tarjeta</h2></div>
+        <div id="resumenBox"></div>
+      </section>
+      <section class="card" id="deudasCard">
+        <div class="card-head"><h2>Lo que me deben</h2><p class="muted small">Sumando todas las tarjetas que son tuyas.</p></div>
+        <div id="deudasBox"></div>
+      </section>
+    </div>
+
+    <section class="card" id="catCard">
+      <div class="card-head"><h2>Gasto por categoría</h2><p class="muted small">Lo que sale de tu bolsillo este mes.</p></div>
+      <div id="catBox"></div>
     </section>
   </div>
 
-  <section class="card" id="balanceCard">
-    <div class="card-head"><h2>Ingresos y egresos</h2><p class="muted small">Balance del mes que estás viendo arriba.</p></div>
-    <div id="balanceBox"></div>
-  </section>
+  <div class="tab-panel" id="panelGastos" hidden>
+    <section class="card">
+      <div class="card-head">
+        <h2>Personas</h2>
+        <p class="muted small">Con quién compartís gastos hoy. Sumá o sacá gente cuando cambie — no quedan fijas.</p>
+      </div>
+      <div id="personasList" class="chips-row"></div>
+      <form id="personForm" class="inline-form">
+        <input id="personInput" type="text" placeholder="Nombre de la persona" maxlength="24" autocomplete="off">
+        <button type="submit" class="btn primary">Agregar</button>
+      </form>
+    </section>
 
-  <section class="card" id="catCard">
-    <div class="card-head"><h2>Gasto por categoría</h2><p class="muted small">Lo que sale de tu bolsillo este mes.</p></div>
-    <div id="catBox"></div>
-  </section>
+    <section class="card">
+      <div class="card-head">
+        <h2>Tarjetas y gastos</h2>
+        <p class="muted small">Las categorías donde cargás tus gastos. Agregá, renombrá o borrá las que necesites — no tenés por qué quedarte con estas tres.</p>
+      </div>
+      <div id="tarjetasList" class="chips-row"></div>
+      <div id="tarjetaEditBox"></div>
+      <form id="tarjetaForm" class="inline-form">
+        <input id="tarjetaInput" type="text" placeholder="Nombre de la tarjeta nueva" maxlength="30" autocomplete="off">
+        <div class="seg" style="flex:0 0 auto; width:auto;">
+          <button type="button" data-action="set-new-tarjeta-mia" data-val="true" class="active">Vos ponés la plata</button>
+          <button type="button" data-action="set-new-tarjeta-mia" data-val="false">La pone otra persona</button>
+        </div>
+        <button type="submit" class="btn primary">Agregar tarjeta</button>
+      </form>
+    </section>
 
-  <section class="card" id="histCard">
-    <div class="card-head"><h2>Historial</h2><p class="muted small">Lo que ya pasó, mes a mes.</p></div>
-    <div id="histBox"></div>
-  </section>
+    <div id="sectionsContainer"></div>
+  </div>
+
+  <div class="tab-panel" id="panelProyeccion" hidden>
+    <section class="card" id="proyCard">
+      <div class="card-head"><h2>Proyección mensual</h2><p class="muted small">Mes a mes, como en tu planilla: todo lo que tenés activo y lo que se viene.</p></div>
+      <div id="proyBox"></div>
+    </section>
+
+    <section class="card" id="histCard">
+      <div class="card-head"><h2>Historial</h2><p class="muted small">Lo que ya pasó, mes a mes.</p></div>
+      <div id="histBox"></div>
+    </section>
+  </div>
 
   <footer class="foot muted small">El mes de arriba controla lo que ves — volvé a "hoy" cuando quieras.</footer>
 </div>
+
+<nav class="tabbar" id="tabbar">
+  <div class="tabbar-inner">
+    <button type="button" data-action="set-tab" data-tab="inicio">Inicio</button>
+    <button type="button" data-action="set-tab" data-tab="gastos">Gastos</button>
+    <button type="button" data-action="set-tab" data-tab="proyeccion">Proyección</button>
+  </div>
+</nav>
 
 <div id="formOverlay" class="form-overlay" hidden></div>
 <div id="syncOverlay" class="form-overlay" hidden></div>
@@ -482,9 +558,25 @@
   var MONEY = new Intl.NumberFormat('es-AR', {style:'currency', currency:'ARS', maximumFractionDigits:0});
   var MONTHFMT = new Intl.DateTimeFormat('es-AR', {month:'long', year:'numeric'});
   var CATS = ['Vivienda','Impuestos','Suscripciones','Hogar','Indumentaria','Viajes','Regalos','Salud','Otros'];
-  var TARJETA_COLORS = ['var(--info)','var(--accent)','var(--warn)','#7C5CBF','#C2703A','#3E7B9E','#8A5A2B','#9B3B4D'];
+  var TARJETA_COLORS = ['var(--info)','var(--accent)','var(--warn)','var(--gold)','#7C5CFF','#2FA6A0','#8A5A2B','#8A4B6B'];
   var LS_STATE_KEY = 'consumosTomiState';
   var LS_CONFIG_KEY = 'consumosTomiFirebaseConfig';
+  var THEME_KEY = 'consumosTomiTheme';
+
+  // Theme: a manual light/dark choice wins over the system setting; with none
+  // saved, prefers-color-scheme decides (handled purely in CSS).
+  function currentEffectiveTheme(){
+    var attr = document.documentElement.getAttribute('data-theme');
+    if(attr === 'light' || attr === 'dark') return attr;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+  function updateThemeToggleIcon(){
+    var btn = document.getElementById('themeToggleBtn');
+    if(!btn) return;
+    var eff = currentEffectiveTheme();
+    btn.textContent = eff === 'dark' ? '☀️' : '🌙';
+    btn.title = eff === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
+  }
 
   function money(n){ return MONEY.format(Math.round(n||0)); }
   function moneyCompact(n){ return new Intl.NumberFormat('es-AR', {maximumFractionDigits:0}).format(Math.round(n||0)); }
@@ -532,6 +624,7 @@
     formError: '',
     resumenTab: 'actual',
     resumenTarjetaId: null,
+    activeTab: 'inicio',
     confirmDeletePerson: null,
     confirmDeleteExpense: null,
     confirmDeleteTarjeta: null,
@@ -540,6 +633,7 @@
     editTarjetaDraftEsMia: true,
     newTarjetaEsMia: true,
     historialOpen: false,
+    onboardingOpen: false,
     showFinished: {},
     syncOpen: false,
     syncDraft: '',
@@ -753,7 +847,7 @@
     return map;
   }
   function personColor(id){
-    var palette = ['#AD8323','#4C6389','#9B3B4D','#2F7A63','#7C5CBF','#C2703A','#3E7B9E','#8A5A2B'];
+    var palette = ['#B8860B','#4C6BAE','#C2314A','#2FA6A0','#7C5CFF','#C7871F','#3E7B9E','#8A4B6B'];
     var h = 0;
     for(var i=0;i<id.length;i++){ h = (h*31 + id.charCodeAt(i)) >>> 0; }
     return palette[h % palette.length];
@@ -762,6 +856,8 @@
   // ---------------- render ----------------
   function render(){
     var key = refMonthKey;
+    updateThemeToggleIcon();
+    renderTabs();
     renderTopbarMonth(key);
     renderSyncStatus();
     renderOnboarding();
@@ -777,6 +873,20 @@
     renderHistorial(key);
     renderFormOverlay();
     renderSyncOverlay();
+  }
+
+  var TAB_PANELS = {inicio:'panelInicio', gastos:'panelGastos', proyeccion:'panelProyeccion'};
+  function renderTabs(){
+    Object.keys(TAB_PANELS).forEach(function(tab){
+      var panel = document.getElementById(TAB_PANELS[tab]);
+      if(panel) panel.hidden = (tab !== ui.activeTab);
+    });
+    var bar = document.getElementById('tabbar');
+    if(bar){
+      bar.querySelectorAll('button[data-tab]').forEach(function(btn){
+        btn.classList.toggle('active', btn.dataset.tab === ui.activeTab);
+      });
+    }
   }
 
   function renderTopbarMonth(key){
@@ -800,8 +910,19 @@
     }
   }
 
+  var ONBOARDING_DISMISS_KEY = 'consumosTomiOnboardingDismissed';
+  function isOnboardingDismissed(){
+    try{ return localStorage.getItem(ONBOARDING_DISMISS_KEY) === '1'; } catch(err){ return false; }
+  }
   function renderOnboarding(){
-    document.getElementById('onboardingCard').hidden = !(state.people.length===0 && state.expenses.length===0);
+    var noDataYet = (state.people.length===0 && state.expenses.length===0);
+    document.getElementById('onboardingCard').hidden = !(noDataYet && !isOnboardingDismissed());
+    document.getElementById('onboardingList').hidden = !ui.onboardingOpen;
+    var toggleBtn = document.getElementById('onboardingToggleBtn');
+    if(toggleBtn){
+      toggleBtn.textContent = ui.onboardingOpen ? '▴' : '▾';
+      toggleBtn.setAttribute('aria-expanded', ui.onboardingOpen ? 'true' : 'false');
+    }
   }
 
   function computeSaldo(key){
@@ -820,9 +941,22 @@
 
   function renderSaldo(key){
     var b = computeSaldo(key);
-    var el = document.getElementById('saldoPill');
-    el.className = 'saldo-pill ' + (b.saldo>=0 ? 'pos' : 'neg');
-    el.textContent = (b.saldo>=0 ? 'Te quedan ' : 'Estás en rojo ') + money(Math.abs(b.saldo));
+    var sign = b.saldo>=0 ? 'pos' : 'neg';
+
+    var top = document.getElementById('topbarSaldo');
+    if(top){
+      top.className = 'topbar-saldo mono ' + sign;
+      top.textContent = money(Math.abs(b.saldo));
+    }
+    var heroFig = document.getElementById('heroSaldo');
+    if(heroFig){
+      heroFig.className = 'hero-figure mono ' + sign;
+      heroFig.textContent = money(Math.abs(b.saldo));
+    }
+    var heroLbl = document.getElementById('heroLabel');
+    if(heroLbl){
+      heroLbl.textContent = b.saldo>=0 ? 'Te quedan (estimado)' : 'Estás en rojo (estimado)';
+    }
   }
 
   function renderPersonas(){
@@ -1325,6 +1459,28 @@
     var tarjetaId = t.dataset.tarjeta;
 
     if(action==='reset-today'){ refMonthKey = todayKey(); render(); return; }
+
+    if(action==='toggle-theme'){
+      var nextTheme = currentEffectiveTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+      try{ localStorage.setItem(THEME_KEY, nextTheme); }catch(err){}
+      updateThemeToggleIcon();
+      return;
+    }
+
+    if(action==='set-tab'){
+      ui.activeTab = t.dataset.tab;
+      renderTabs();
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    if(action==='toggle-onboarding'){ ui.onboardingOpen = !ui.onboardingOpen; renderOnboarding(); return; }
+    if(action==='dismiss-onboarding'){
+      try{ localStorage.setItem(ONBOARDING_DISMISS_KEY, '1'); } catch(err){}
+      renderOnboarding();
+      return;
+    }
 
     if(action==='open-sync-config'){
       ui.syncOpen = true; ui.syncFormError = '';
