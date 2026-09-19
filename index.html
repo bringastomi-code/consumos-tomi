@@ -242,7 +242,7 @@
 
   .inline-form{display:flex; gap:8px; flex-wrap:wrap;}
   .inline-form input[type="text"]{flex:1; min-width:160px;}
-  input[type="text"], input[type="number"], input[type="month"], select{
+  input[type="text"], input[type="number"], input[type="month"], input[type="date"], select{
     font:inherit; padding:10px 12px; border-radius:var(--radius-sm);
     border:none; background:var(--surface-2); color:var(--ink);
     width:100%;
@@ -373,6 +373,21 @@
   }
 
   .dot{width:9px; height:9px; border-radius:50%; flex:none; display:inline-block;}
+  .exp-desc-compact .dot{margin-right:7px; vertical-align:middle;}
+
+  /* Round color swatches for picking a tarjeta's or a gasto's own dot color. */
+  .swatch-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:2px;}
+  .swatch{
+    width:26px; height:26px; border-radius:50%; flex:none; padding:0; border:none;
+    background:var(--sw, var(--surface-2)); color:#fff; font-size:.7rem; font-weight:700;
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .swatch.active{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--sw, var(--ink));}
+  .swatch-auto{
+    background:var(--surface-2); color:var(--muted);
+    border:1px dashed var(--border);
+  }
+  .swatch-auto.active{box-shadow:0 0 0 2px var(--surface), 0 0 0 4px var(--muted);}
 
   .resumen-head{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px;}
   .resumen-head select{width:auto; padding:6px 10px; font-size:.85rem;}
@@ -485,6 +500,18 @@
   .split-total{margin:6px 0 0; font-weight:600;}
   .split-total.ok{color:var(--positive-ink);}
   .split-total.warn{color:var(--gold-ink);}
+
+  /* "Desglosar en partes" — a compound expense's component rows (concepto / monto / vencimiento). */
+  .desglose-field{display:flex; flex-direction:column; gap:6px; margin-top:2px;}
+  .desglose-head{display:flex; gap:6px; padding-inline:1px;}
+  .desglose-head span:nth-child(1){flex:1 1 130px;}
+  .desglose-head span:nth-child(2){flex:0 0 90px;}
+  .desglose-head span:nth-child(3){flex:1 1 132px;}
+  .desglose-row{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+  .desglose-row .desglose-label{flex:1 1 130px; min-width:110px;}
+  .desglose-row .desglose-monto{flex:0 0 90px; width:90px;}
+  .desglose-row .desglose-fecha{flex:1 1 132px; min-width:132px;}
+  .desglose-row .icon-btn{flex:0 0 auto;}
 
   /* Empty states get a small linear icon above the message instead of bare text. */
   .empty-hint{
@@ -618,6 +645,7 @@
           <button type="button" data-action="set-new-tarjeta-mia" data-val="true" class="active">Vos ponés la plata</button>
           <button type="button" data-action="set-new-tarjeta-mia" data-val="false">La pone otra persona</button>
         </div>
+        <div id="newTarjetaColorField" style="flex:1 1 100%;"></div>
         <button type="submit" class="btn primary">Agregar tarjeta</button>
       </form>
     </section>
@@ -670,6 +698,9 @@
   var MONTHFMT = new Intl.DateTimeFormat('es-AR', {month:'long', year:'numeric'});
   var CATS = ['Vivienda','Impuestos','Suscripciones','Hogar','Indumentaria','Viajes','Regalos','Salud','Otros'];
   var TARJETA_COLORS = ['var(--info)','var(--accent)','var(--warn)','var(--gold)','#7C5CFF','#2FA6A0','#8A5A2B','#8A4B6B'];
+  // Same palette exposed as fixed hexes (not CSS vars) for the swatch pickers, since a
+  // theme-dependent var() would make the picker's own dots shift color between themes.
+  var DOT_PALETTE = ['#0A84FF','#5E9EFF','#FF9F0A','#FFB340','#7C5CFF','#2FA6A0','#8A5A2B','#8A4B6B','#FF453A','#32ADE6'];
   var LS_STATE_KEY = 'consumosTomiState';
   var LS_CONFIG_KEY = 'consumosTomiFirebaseConfig';
   var THEME_KEY = 'consumosTomiTheme';
@@ -771,16 +802,22 @@
     formSplitPercents: {},
     expenseSearch: '',
     pendingRestore: null,
-    restoreConfirmOpen: false
+    restoreConfirmOpen: false,
+    newTarjetaColor: null,
+    editTarjetaDraftColor: null,
+    formColor: null,
+    formMontoMode: 'simple',
+    formDesglose: []
   };
 
-  function makeTarjeta(nombre, esMia, builtin, fixedId){
-    return {id: fixedId || ('c_'+uid()), nombre:nombre, esMia: esMia!==false, builtin: !!builtin};
+  function makeTarjeta(nombre, esMia, builtin, fixedId, color){
+    return {id: fixedId || ('c_'+uid()), nombre:nombre, esMia: esMia!==false, builtin: !!builtin, color: color||null};
   }
   function makeExpense(desc, monto, cuotas, mesInicio, tarjetaId, personas, categoria, incluyeYoVal){
     return {id:uid(), desc:desc, monto:monto, cuotas:cuotas, mesInicio:mesInicio,
       tarjetaId:tarjetaId, personas:personas.slice(), categoria:categoria,
-      incluyeYo: incluyeYoVal===false ? false : true, archived:false, createdAt:Date.now()};
+      incluyeYo: incluyeYoVal===false ? false : true, archived:false, createdAt:Date.now(),
+      color:null, desglose:null};
   }
 
   function defaultState(){
@@ -914,12 +951,49 @@
     for(var i=0;i<state.tarjetas.length;i++){ if(state.tarjetas[i].id===id) return i; }
     return state.tarjetas.length;
   }
-  function tarjetaColor(idx){ return TARJETA_COLORS[idx % TARJETA_COLORS.length]; }
+  // Accepts either a tarjeta object (preferred, respects a custom color) or a bare
+  // index (legacy call sites, always the auto palette) so every caller keeps working.
+  function tarjetaColor(t){
+    if(t && typeof t === 'object'){
+      if(t.color) return t.color;
+      return TARJETA_COLORS[tarjetaIndex(t.id) % TARJETA_COLORS.length];
+    }
+    var idx = t||0;
+    return TARJETA_COLORS[idx % TARJETA_COLORS.length];
+  }
+  // The dot color an expense actually shows: its own override if it has one,
+  // otherwise whatever its tarjeta is using.
+  function expenseColor(e){ return e.color || tarjetaColor(tarjetaById(e.tarjetaId)); }
+  // Renders a row of round color swatches; clicking one fires data-action with
+  // data-color set to the picked hex (or '' for the "auto" swatch, when allowed).
+  function swatchRowHtml(selected, dataAction, allowAuto){
+    var html = '<div class="swatch-row">';
+    if(allowAuto){
+      html += '<button type="button" class="swatch swatch-auto' + (!selected?' active':'') + '" data-action="' + dataAction + '" data-color="" title="Automático">' + (!selected?'✓':'') + '</button>';
+    }
+    html += DOT_PALETTE.map(function(c){
+      var isActive = selected === c;
+      return '<button type="button" class="swatch' + (isActive?' active':'') + '" style="--sw:' + c + '" data-action="' + dataAction + '" data-color="' + c + '" title="' + c + '">' + (isActive?'✓':'') + '</button>';
+    }).join('');
+    return html + '</div>';
+  }
   function esMiaTarjetaIds(){ return state.tarjetas.filter(function(t){ return t.esMia; }).map(function(t){ return t.id; }); }
 
   // ---------------- computed ----------------
   function cuotaMensual(e){ return e.cuotas ? e.monto/e.cuotas : e.monto; }
   function endKey(e){ return e.cuotas ? addMonthsToKey(e.mesInicio, e.cuotas-1) : null; }
+  // How many installments an expense still has left, counting forward from `key`
+  // (inclusive). A "fijo" expense (no cuotas) isn't an installment plan at all, so
+  // it has none pending — used only to sort the projection, most-remaining first.
+  function cuotasPendientesDesde(e, key){
+    if(!e.cuotas) return 0;
+    var ek = endKey(e);
+    var a = key.split('-').map(Number), b = ek.split('-').map(Number);
+    var diff = (b[0]-a[0])*12 + (b[1]-a[1]) + 1;
+    if(diff < 0) diff = 0;
+    if(diff > e.cuotas) diff = e.cuotas;
+    return diff;
+  }
   // Pure date-range check — ignores the archived flag. Used for history, where what
   // actually happened shouldn't change just because you tidied up the view later.
   function dateActiveInMonth(e, key){
@@ -1207,12 +1281,19 @@
           '<button type="button" data-action="remove-tarjeta" data-tarjeta="' + t.id + '" title="Sí, eliminar">✓</button>' +
           '<button type="button" data-action="cancel-remove-tarjeta" title="No">✕</button></span>';
       }
-      return '<span class="chip"><span class="dot" style="background:' + tarjetaColor(idx) + '"></span>' + esc(t.nombre) +
+      return '<span class="chip"><span class="dot" style="background:' + tarjetaColor(t) + '"></span>' + esc(t.nombre) +
         '<span class="tag">· ' + (t.esMia?'tuya':'de otro') + '</span>' +
         '<button type="button" data-action="edit-tarjeta" data-tarjeta="' + t.id + '" title="Editar">✎</button>' +
         (state.tarjetas.length>1 ? '<button type="button" data-action="ask-remove-tarjeta" data-tarjeta="' + t.id + '" title="Eliminar">✕</button>' : '') +
       '</span>';
     }).join('');
+
+    var newColorField = document.getElementById('newTarjetaColorField');
+    if(newColorField){
+      var suggestedColor = DOT_PALETTE[state.tarjetas.length % DOT_PALETTE.length];
+      newColorField.innerHTML = '<label class="muted small" style="display:block; margin-bottom:4px;">Color del punto</label>' +
+        swatchRowHtml(ui.newTarjetaColor || suggestedColor, 'set-new-tarjeta-color', false);
+    }
 
     var editBox = document.getElementById('tarjetaEditBox');
     var editing = ui.editingTarjetaId ? tarjetaById(ui.editingTarjetaId) : null;
@@ -1224,6 +1305,7 @@
             '<button type="button" data-action="set-edit-tarjeta-mia" data-val="true" class="' + (ui.editTarjetaDraftEsMia?'active':'') + '">Vos ponés la plata</button>' +
             '<button type="button" data-action="set-edit-tarjeta-mia" data-val="false" class="' + (!ui.editTarjetaDraftEsMia?'active':'') + '">La pone otra persona</button>' +
           '</div>' +
+          '<div class="field"><label class="muted small">Color del punto</label>' + swatchRowHtml(ui.editTarjetaDraftColor || tarjetaColor(editing), 'set-edit-tarjeta-color', false) + '</div>' +
           '<div class="form-actions">' +
             '<button type="button" class="btn ghost" data-action="cancel-edit-tarjeta">Cancelar</button>' +
             '<button type="button" class="btn primary" data-action="save-edit-tarjeta">Guardar</button>' +
@@ -1261,6 +1343,7 @@
       metaBits.push('fijo');
     }
     if(e.categoria) metaBits.push(e.categoria);
+    if(e.desglose && e.desglose.length) metaBits.push('desglosado en ' + e.desglose.length + (e.desglose.length===1?' parte':' partes'));
     var peopleNames = (incluyeYo(e) ? ['Vos'] : []).concat((e.personas||[]).map(personName));
     if(peopleNames.length) metaBits.push(peopleNames.join(', '));
 
@@ -1296,7 +1379,7 @@
 
     return '<div class="expense-row-compact">' +
       '<div class="exp-line-main">' +
-        '<div class="exp-desc-compact">' + esc(e.desc) + '</div>' +
+        '<div class="exp-desc-compact"><span class="dot" style="background:' + expenseColor(e) + '"></span>' + esc(e.desc) + '</div>' +
         '<div class="exp-amounts-compact">' +
           '<span class="mono exp-total">' + money(cm) + '</span>' +
           '<button type="button" class="icon-btn kebab" data-action="toggle-actions" data-id="' + e.id + '" title="Acciones" aria-expanded="' + (actionsOpen ? 'true' : 'false') + '">⋮</button>' +
@@ -1313,8 +1396,8 @@
 
   function renderSections(key){
     var container = document.getElementById('sectionsContainer');
-    container.innerHTML = state.tarjetas.map(function(t, idx){
-      return '<section class="card section-card" style="--tarjeta-c:' + tarjetaColor(idx) + '" id="tj_' + t.id + '"></section>';
+    container.innerHTML = state.tarjetas.map(function(t){
+      return '<section class="card section-card" style="--tarjeta-c:' + tarjetaColor(t) + '" id="tj_' + t.id + '"></section>';
     }).join('');
     state.tarjetas.forEach(function(t, idx){ renderOneSection(t, idx, key); });
   }
@@ -1332,6 +1415,7 @@
     if(!el) return;
     var all = state.expenses.filter(function(e){ return e.tarjetaId===t.id; });
     if(ui.expenseSearch) all = all.filter(expenseMatchesSearch);
+    all.sort(function(a,b){ return cuotaMensual(b) - cuotaMensual(a); });
     var visible = all.filter(function(e){ return isVisibleActive(e, key); });
     var finished = all.filter(function(e){ return !isVisibleActive(e, key); });
 
@@ -1355,7 +1439,7 @@
 
     el.innerHTML =
       '<div class="card-head">' +
-        '<div class="titles"><span class="section-tag"><span class="dot" style="background:' + tarjetaColor(idx) + '"></span>' + esc(t.nombre) + '</span>' +
+        '<div class="titles"><span class="section-tag"><span class="dot" style="background:' + tarjetaColor(t) + '"></span>' + esc(t.nombre) + '</span>' +
           '<p class="muted small">' + hint + '</p></div>' +
         '<button type="button" class="btn small primary" data-action="open-form" data-tarjeta="' + t.id + '">+ Agregar</button>' +
       '</div>' +
@@ -1444,14 +1528,15 @@
   // Shared table builder for both the forward projection and the backward history.
   function buildMonthTable(months, activeFn, opts){
     opts = opts || {};
-    var rows = state.expenses.filter(function(e){
-      if(opts.excludeArchived && e.archived) return false;
-      return months.some(function(mk){ return activeFn(e, mk); });
-    }).sort(function(a,b){
+    var defaultSort = function(a,b){
       var ia = tarjetaIndex(a.tarjetaId), ib = tarjetaIndex(b.tarjetaId);
       if(ia !== ib) return ia-ib;
       return cmpKey(a.mesInicio, b.mesInicio);
-    });
+    };
+    var rows = state.expenses.filter(function(e){
+      if(opts.excludeArchived && e.archived) return false;
+      return months.some(function(mk){ return activeFn(e, mk); });
+    }).sort(opts.sortFn || defaultSort);
     if(!rows.length) return null;
 
     var headCells = months.map(function(mk){
@@ -1459,13 +1544,12 @@
     }).join('');
 
     var bodyRows = rows.map(function(e){
-      var idx = tarjetaIndex(e.tarjetaId);
       var cells = months.map(function(mk){
         var active = activeFn(e, mk);
         return '<td class="mono">' + (active ? moneyCompact(cuotaMensual(e)) : '<span class="proj-dash">—</span>') + '</td>';
       }).join('');
       var note = (opts.showArchivedNote && e.archived) ? ' <span class="muted" style="font-weight:400;">(archivado)</span>' : '';
-      return '<tr><td class="proj-desc-col"><span class="proj-dot" style="background:' + tarjetaColor(idx) + '"></span>' + esc(e.desc) + note + '</td>' + cells + '</tr>';
+      return '<tr><td class="proj-desc-col"><span class="proj-dot" style="background:' + expenseColor(e) + '"></span>' + esc(e.desc) + note + '</td>' + cells + '</tr>';
     }).join('');
 
     var totalsHtml = (opts.totals||[]).map(function(t){
@@ -1524,7 +1608,14 @@
     var html = buildMonthTable(months, isActiveNow, {
       excludeArchived: true,
       labelFn: function(mk){ return mk===key ? 'Este mes' : shortMonthLabel(mk); },
-      totals: totals
+      totals: totals,
+      // Grouped by tarjeta like before, but within each group show the ones with
+      // the most installments still ahead first, down to the ones about to end.
+      sortFn: function(a,b){
+        var ia = tarjetaIndex(a.tarjetaId), ib = tarjetaIndex(b.tarjetaId);
+        if(ia !== ib) return ia-ib;
+        return cuotasPendientesDesde(b,key) - cuotasPendientesDesde(a,key);
+      }
     });
     box.innerHTML = html
       ? html + '<p class="muted small" style="margin-top:8px;">El ingreso, el ahorro y lo que te deben se asumen iguales todos los meses (salvo que cambien las cuotas).</p>'
@@ -1626,7 +1717,7 @@
       rowsHtml = ids.map(function(key){
         var val = (typeof ui.formSplitPercents[key]==='number') ? ui.formSplitPercents[key] : Math.round((100/ids.length)*10)/10;
         return '<div class="split-row"><span class="split-name">' + esc(participantLabel(key)) + '</span>' +
-          '<div class="split-input-wrap"><input type="number" class="mono split-pct-input" data-split-key="' + esc(key) + '" min="0" max="100" step="1" value="' + val + '">' +
+          '<div class="split-input-wrap"><input type="number" inputmode="decimal" class="mono split-pct-input" data-split-key="' + esc(key) + '" min="0" max="100" step="0.1" value="' + val + '">' +
           '<span class="muted small">%</span></div></div>';
       }).join('');
       var totalInfo = splitTotalText(splitSumFor(ids));
@@ -1674,6 +1765,68 @@
     totalEl.textContent = totalInfo.text;
   }
 
+  // ---------------- compound expenses (e.g. "Departamento": alquiler + servicios +
+  // impuestos, each with its own vencimiento) ----------------
+  // A gasto can either take one plain "Monto total" (the default, unchanged), or be
+  // broken into several parts here. When broken down, the total is always the sum of
+  // the parts — computed automatically — and that's the only number the rest of the
+  // app ever sees: nowhere else changes, exactly like the user asked.
+  function desgloseSum(){
+    return ui.formDesglose.reduce(function(s,d){ return s + (typeof d.monto==='number' ? d.monto : (parseFloat(d.monto)||0)); }, 0);
+  }
+  function montoSectionHtml(vals, editing){
+    var mode = ui.formMontoMode;
+    var cuotasVal = (editing && editing.cuotas) ? editing.cuotas : '';
+    var isDesglose = mode === 'desglose';
+    var montoLabel = isDesglose ? 'Monto total <span class="muted small">(suma del desglose)</span>' : 'Monto total';
+    var montoValue = isDesglose ? desgloseSum() : esc(vals.monto);
+    var toggleHtml = '<div class="seg" style="margin-bottom:8px;">' +
+      '<button type="button" data-action="set-monto-mode" data-val="simple" class="' + (!isDesglose?'active':'') + '">Monto simple</button>' +
+      '<button type="button" data-action="set-monto-mode" data-val="desglose" class="' + (isDesglose?'active':'') + '">Desglosar en partes</button>' +
+    '</div>';
+    var itemsHtml = '';
+    if(isDesglose){
+      itemsHtml = ui.formDesglose.map(function(item){
+        return '<div class="desglose-row">' +
+          '<input type="text" class="desglose-label" data-desglose-id="' + item.id + '" placeholder="Concepto (ej: Alquiler)" maxlength="30" value="' + esc(item.label||'') + '">' +
+          '<input type="number" inputmode="decimal" class="mono desglose-monto" data-desglose-id="' + item.id + '" min="0" step="1" placeholder="Monto" value="' + (item.monto ? item.monto : '') + '">' +
+          '<input type="date" class="desglose-fecha" data-desglose-id="' + item.id + '" value="' + esc(item.vencimiento||'') + '" title="Fecha de vencimiento">' +
+          '<button type="button" class="icon-btn" data-action="remove-desglose-item" data-desglose-id="' + item.id + '" title="Quitar esta parte">✕</button>' +
+        '</div>';
+      }).join('');
+      itemsHtml = '<div class="desglose-field">' +
+        '<div class="desglose-head muted small"><span>Concepto</span><span>Monto</span><span>Vencimiento</span></div>' +
+        itemsHtml +
+        '<button type="button" class="btn ghost small" data-action="add-desglose-item">+ Agregar parte</button>' +
+      '</div>';
+    }
+    return '<div id="montoSection">' +
+      '<div class="field-row">' +
+        '<div class="field"><label for="f_monto">' + montoLabel + '</label>' +
+          '<input type="number" id="f_monto" required min="0" step="1" class="mono" value="' + montoValue + '" placeholder="0"' + (isDesglose?' readonly':'') + '></div>' +
+        '<div class="field"><label for="f_cuotas">N° de cuotas</label><input type="number" id="f_cuotas" min="1" step="1" class="mono" value="' + cuotasVal + '" placeholder="Vacío = fijo"></div>' +
+      '</div>' +
+      toggleHtml + itemsHtml +
+    '</div>';
+  }
+  // Same in-place-patch trick as the split section: swap only #montoSection so
+  // typing in the description/category/etc. never gets reset mid-edit.
+  function renderMontoSectionInPlace(){
+    var editing = ui.editingId ? state.expenses.filter(function(e){ return e.id===ui.editingId; })[0] : null;
+    var vals = editing || {monto:''};
+    var old = document.getElementById('montoSection');
+    if(old) old.outerHTML = montoSectionHtml(vals, editing);
+  }
+  function formColorFieldHtml(){
+    return '<div class="field color-field"><label class="muted small">Color del punto <span class="muted small">(opcional)</span></label>' +
+      swatchRowHtml(ui.formColor, 'set-form-color', true) +
+    '</div>';
+  }
+  function renderFormColorFieldInPlace(){
+    var old = document.querySelector('#expenseForm .color-field');
+    if(old) old.outerHTML = formColorFieldHtml();
+  }
+
   function renderFormOverlay(){
     var overlay = document.getElementById('formOverlay');
     if(!ui.formOpen){ overlay.hidden = true; overlay.innerHTML=''; return; }
@@ -1698,10 +1851,7 @@
         '<div class="field"><label>¿A qué tarjeta va?</label><div class="seg">' + tarjetaButtons + '</div></div>' +
         '<div class="field"><label for="f_desc">Descripción</label>' +
           '<input type="text" id="f_desc" required maxlength="60" value="' + esc(vals.desc) + '" placeholder="Ej: Zapatillas, Viaje a Bariloche…"></div>' +
-        '<div class="field-row">' +
-          '<div class="field"><label for="f_monto">Monto total</label><input type="number" id="f_monto" required min="0" step="1" class="mono" value="' + esc(vals.monto) + '" placeholder="0"></div>' +
-          '<div class="field"><label for="f_cuotas">N° de cuotas</label><input type="number" id="f_cuotas" min="1" step="1" class="mono" value="' + (editing && editing.cuotas ? editing.cuotas : '') + '" placeholder="Vacío = fijo"></div>' +
-        '</div>' +
+        montoSectionHtml(vals, editing) +
         '<div class="field"><label for="f_mes">Mes de inicio</label><input type="month" id="f_mes" required value="' + esc(vals.mesInicio) + '"></div>' +
         '<div class="field personas-field"><label>¿A quiénes corresponde? <span class="muted small">(tocá "Vos" para sacarte de la división)</span></label>' +
           '<div class="chips-row" style="margin-bottom:0;">' + personaToggles + '</div></div>' +
@@ -1709,6 +1859,7 @@
         '<div class="field"><label for="f_cat">Categoría <span class="muted small">(opcional)</span></label>' +
           '<input type="text" id="f_cat" list="catList" maxlength="24" value="' + esc(vals.categoria) + '" placeholder="Ej: Hogar">' +
           '<datalist id="catList">' + catOptions + '</datalist></div>' +
+        formColorFieldHtml() +
         errorHtml +
         '<div class="form-actions">' +
           '<button type="button" class="btn ghost" data-action="close-form">Cancelar</button>' +
@@ -1784,6 +1935,11 @@
     ui.formIncluyeYo = editingExpense ? incluyeYo(editingExpense) : true;
     ui.formSplitCustom = editingExpense ? !!editingExpense.splitCustom : false;
     ui.formSplitPercents = (editingExpense && editingExpense.splitPercents) ? Object.assign({}, editingExpense.splitPercents) : {};
+    ui.formColor = editingExpense ? (editingExpense.color || null) : null;
+    ui.formMontoMode = (editingExpense && editingExpense.desglose && editingExpense.desglose.length) ? 'desglose' : 'simple';
+    ui.formDesglose = (editingExpense && editingExpense.desglose)
+      ? editingExpense.desglose.map(function(d){ return {id:d.id||uid(), label:d.label||'', monto:(typeof d.monto==='number'?d.monto:(parseFloat(d.monto)||0)), vencimiento:d.vencimiento||''}; })
+      : [];
     ui.formError = '';
     render();
     var d = document.getElementById('f_desc');
@@ -1796,6 +1952,9 @@
     ui.formIncluyeYo = true;
     ui.formSplitCustom = false;
     ui.formSplitPercents = {};
+    ui.formColor = null;
+    ui.formMontoMode = 'simple';
+    ui.formDesglose = [];
     ui.formError = '';
     render();
   }
@@ -1870,14 +2029,19 @@
     }
     if(action==='edit-tarjeta'){
       var tj = tarjetaById(tarjetaId);
-      if(tj){ ui.editingTarjetaId = tarjetaId; ui.editTarjetaDraftEsMia = tj.esMia; renderTarjetas(); }
+      if(tj){ ui.editingTarjetaId = tarjetaId; ui.editTarjetaDraftEsMia = tj.esMia; ui.editTarjetaDraftColor = tarjetaColor(tj); renderTarjetas(); }
       return;
     }
-    if(action==='cancel-edit-tarjeta'){ ui.editingTarjetaId = null; renderTarjetas(); return; }
+    if(action==='cancel-edit-tarjeta'){ ui.editingTarjetaId = null; ui.editTarjetaDraftColor = null; renderTarjetas(); return; }
     if(action==='set-edit-tarjeta-mia'){
       ui.editTarjetaDraftEsMia = (t.dataset.val === 'true');
       var segE = t.closest('.seg');
       if(segE) segE.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b.dataset.val===String(ui.editTarjetaDraftEsMia)); });
+      return;
+    }
+    if(action==='set-edit-tarjeta-color'){
+      ui.editTarjetaDraftColor = t.dataset.color || null;
+      renderTarjetas();
       return;
     }
     if(action==='save-edit-tarjeta'){
@@ -1887,9 +2051,16 @@
         var newName = nameInput ? nameInput.value.trim() : '';
         if(newName) tj2.nombre = newName;
         tj2.esMia = ui.editTarjetaDraftEsMia;
+        tj2.color = ui.editTarjetaDraftColor || null;
       }
       ui.editingTarjetaId = null;
+      ui.editTarjetaDraftColor = null;
       persist(); render(); return;
+    }
+    if(action==='set-new-tarjeta-color'){
+      ui.newTarjetaColor = t.dataset.color || null;
+      renderTarjetas();
+      return;
     }
     if(action==='set-new-tarjeta-mia'){
       ui.newTarjetaEsMia = (t.dataset.val === 'true');
@@ -1932,6 +2103,33 @@
         ids3.forEach(function(k){ if(typeof ui.formSplitPercents[k] !== 'number') ui.formSplitPercents[k] = pct3; });
       }
       renderSplitSectionInPlace();
+      return;
+    }
+    if(action==='set-form-color'){
+      ui.formColor = t.dataset.color || null;
+      renderFormColorFieldInPlace();
+      return;
+    }
+    if(action==='set-monto-mode'){
+      ui.formMontoMode = (t.dataset.val === 'desglose') ? 'desglose' : 'simple';
+      if(ui.formMontoMode === 'desglose' && ui.formDesglose.length === 0){
+        ui.formDesglose.push({id:uid(), label:'', monto:0, vencimiento:''});
+      }
+      renderMontoSectionInPlace();
+      return;
+    }
+    if(action==='add-desglose-item'){
+      ui.formDesglose.push({id:uid(), label:'', monto:0, vencimiento:''});
+      renderMontoSectionInPlace();
+      var rows = document.querySelectorAll('.desglose-label');
+      var lastLabel = rows[rows.length-1];
+      if(lastLabel) lastLabel.focus();
+      return;
+    }
+    if(action==='remove-desglose-item'){
+      var did = t.dataset.desgloseId;
+      ui.formDesglose = ui.formDesglose.filter(function(d){ return d.id !== did; });
+      renderMontoSectionInPlace();
       return;
     }
     if(action==='set-resumen-tab'){ ui.resumenTab = t.dataset.tab; renderResumen(refMonthKey); return; }
@@ -2048,20 +2246,37 @@
       var tinput = document.getElementById('tarjetaInput');
       var tname = tinput.value.trim();
       if(!tname) return;
-      state.tarjetas.push(makeTarjeta(tname, ui.newTarjetaEsMia, false));
+      var suggestedColor = DOT_PALETTE[state.tarjetas.length % DOT_PALETTE.length];
+      state.tarjetas.push(makeTarjeta(tname, ui.newTarjetaEsMia, false, null, ui.newTarjetaColor || suggestedColor));
       tinput.value = '';
       ui.newTarjetaEsMia = true;
+      ui.newTarjetaColor = null;
       persist(); render();
       return;
     }
     if(e.target.id === 'expenseForm'){
       e.preventDefault();
       var desc = document.getElementById('f_desc').value.trim();
-      var monto = parseFloat(document.getElementById('f_monto').value) || 0;
       var cuotasRaw = document.getElementById('f_cuotas').value;
       var cuotas = cuotasRaw ? Math.max(1, parseInt(cuotasRaw,10)) : null;
       var mesInicio = document.getElementById('f_mes').value || refMonthKey;
       var categoria = document.getElementById('f_cat').value.trim();
+
+      var desgloseToSave = null;
+      if(ui.formMontoMode === 'desglose'){
+        desgloseToSave = ui.formDesglose
+          .map(function(d){ return {id:d.id, label:(d.label||'').trim(), monto: (typeof d.monto==='number'?d.monto:(parseFloat(d.monto)||0)), vencimiento: d.vencimiento||''}; })
+          .filter(function(d){ return d.label || d.monto>0; });
+        if(!desgloseToSave.length){
+          ui.formError = 'Agregá al menos una parte del desglose, con su monto.';
+          renderFormOverlay();
+          return;
+        }
+      }
+      var monto = ui.formMontoMode === 'desglose'
+        ? desgloseToSave.reduce(function(s,d){ return s+d.monto; }, 0)
+        : (parseFloat(document.getElementById('f_monto').value) || 0);
+
       if(!desc || monto<=0){ return; }
       if(!ui.formTarjetaId){
         ui.formError = 'Primero creá una tarjeta en "Tarjetas y gastos".';
@@ -2086,6 +2301,7 @@
         participantIds.forEach(function(k){ splitPercentsToSave[k] = ui.formSplitPercents[k] || 0; });
       }
       var useCustomSplit = !!splitPercentsToSave;
+      var colorToSave = ui.formColor || null;
 
       if(ui.editingId){
         state.expenses.forEach(function(x){
@@ -2095,12 +2311,16 @@
             x.incluyeYo=ui.formIncluyeYo;
             x.splitCustom = useCustomSplit;
             x.splitPercents = splitPercentsToSave;
+            x.color = colorToSave;
+            x.desglose = desgloseToSave;
           }
         });
       } else {
         var newExpense = makeExpense(desc, monto, cuotas, mesInicio, ui.formTarjetaId, ui.formPersonas, categoria, ui.formIncluyeYo);
         newExpense.splitCustom = useCustomSplit;
         newExpense.splitPercents = splitPercentsToSave;
+        newExpense.color = colorToSave;
+        newExpense.desglose = desgloseToSave;
         state.expenses.push(newExpense);
       }
       var wasEditing = !!ui.editingId;
@@ -2153,6 +2373,19 @@
       var v = parseFloat(e.target.value);
       ui.formSplitPercents[key] = isNaN(v) ? 0 : v;
       updateSplitTotalDisplay();
+      return;
+    }
+    if(e.target.classList && (e.target.classList.contains('desglose-label') || e.target.classList.contains('desglose-monto') || e.target.classList.contains('desglose-fecha'))){
+      var did = e.target.dataset.desgloseId;
+      var item = ui.formDesglose.filter(function(d){ return d.id===did; })[0];
+      if(!item) return;
+      if(e.target.classList.contains('desglose-label')) item.label = e.target.value;
+      else if(e.target.classList.contains('desglose-monto')) item.monto = parseFloat(e.target.value) || 0;
+      else if(e.target.classList.contains('desglose-fecha')) item.vencimiento = e.target.value;
+      // Keep "Monto total" in sync live, without a full re-render, so typing in a
+      // part's amount never loses focus or resets anything else in the form.
+      var fm = document.getElementById('f_monto');
+      if(fm && ui.formMontoMode === 'desglose') fm.value = desgloseSum();
       return;
     }
     if(e.target.id === 'expenseSearchInput'){
